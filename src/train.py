@@ -54,7 +54,7 @@ def main():
     optimizer = torch.optim.AdamW(model.parameters(), lr=6e-5, weight_decay=1e-4)
 
     # Scheduler: 5-epoch linear warmup then CosineAnnealing
-    epochs = 5 if args.debug else 20
+    epochs = 2 if args.debug else 20
     warmup_epochs = 5
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs - warmup_epochs, eta_min=1e-6)
     warmup_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=0.1, end_factor=1.0, total_iters=warmup_epochs)
