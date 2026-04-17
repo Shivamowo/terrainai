@@ -1,4 +1,5 @@
 import argparse
+import json
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -11,11 +12,13 @@ from dataset import TerrainDataset
 from model import get_model
 from utils import compute_iou_per_class, compute_miou, get_class_names
 from qdrant_miner import setup_collection, store_hard_examples, get_hard_sampler
+from schemas import make_epoch_log
 
 def main():
     parser = argparse.ArgumentParser(description='Train SegFormer-B2 for TerrainAI')
     parser.add_argument('--debug', action='store_true', help='Run in debug mode: 1 epoch on 10 images only, CPU')
     parser.add_argument('--root', type=str, default=r'C:\Users\avani\terrainai', help='Path to project root')
+    parser.add_argument('--run_id', type=str, default='run_default', help='Unique identifier for this training run')
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() and not args.debug else 'cpu')
@@ -32,6 +35,7 @@ def main():
     logs_dir = root / 'logs'
     checkpoints_dir.mkdir(exist_ok=True)
     logs_dir.mkdir(exist_ok=True)
+    epoch_metrics_path = logs_dir / 'epoch_metrics.jsonl'
 
     # Datasets
     train_dataset = TerrainDataset(root, 'train', debug=args.debug)
@@ -70,8 +74,10 @@ def main():
     results = []
 
     for epoch in range(epochs):
-        # Training
+        # Training — accumulate loss for logging
         model.train()
+        train_loss_total = 0.0
+        train_loss_count = 0
         for imgs, masks in train_loader:
             imgs, masks = imgs.to(device), masks.to(device)
             optimizer.zero_grad()
@@ -80,6 +86,9 @@ def main():
             loss = combined_loss(outputs, masks)
             loss.backward()
             optimizer.step()
+            train_loss_total += loss.item()
+            train_loss_count += 1
+        train_loss = train_loss_total / train_loss_count if train_loss_count > 0 else 0.0
 
         # Adjust scheduler
         if epoch < warmup_epochs:
@@ -87,18 +96,23 @@ def main():
         else:
             scheduler.step()
 
-        # Validation: accumulate preds and targets globally
+        # Validation: accumulate preds, targets, and val loss globally
         model.eval()
         pred_list = []
         target_list = []
+        val_loss_total = 0.0
+        val_loss_count = 0
         with torch.no_grad():
             for imgs, masks in val_loader:
                 imgs, masks = imgs.to(device), masks.to(device)
                 outputs = model(imgs)
                 outputs = F.interpolate(outputs, size=(512, 512), mode='bilinear', align_corners=False)
+                val_loss_total += combined_loss(outputs, masks).item()
+                val_loss_count += 1
                 preds = torch.argmax(outputs, dim=1)
                 pred_list.append(preds.cpu())
                 target_list.append(masks.cpu())
+        val_loss = val_loss_total / val_loss_count if val_loss_count > 0 else 0.0
 
         # Compute IoU globally
         iou_dict = compute_iou_per_class(pred_list, target_list, num_classes=10)
@@ -106,7 +120,7 @@ def main():
 
         # Print results
         class_names = get_class_names()
-        print(f'Epoch {epoch + 1}/{epochs}: mIoU = {miou:.4f}')
+        print(f'Epoch {epoch + 1}/{epochs}: mIoU = {miou:.4f}  train_loss={train_loss:.4f}  val_loss={val_loss:.4f}')
         for cls in range(10):
             val = iou_dict[cls]
             name = class_names[cls]
@@ -129,7 +143,26 @@ def main():
 
         # ---- Qdrant: mine hard examples after validation ----
         print(f'[Epoch {epoch + 1}] Mining hard examples from validation set...')
-        store_hard_examples(qclient, model, val_loader, device)
+        hard_count, mean_hard_iou = store_hard_examples(
+            qclient, model, val_loader, device,
+            run_id=args.run_id,
+            split='val',
+            epoch=epoch + 1,
+        )
+
+        # ---- Append epoch metrics to logs/epoch_metrics.jsonl ----
+        epoch_log = make_epoch_log(
+            epoch=epoch + 1,
+            run_id=args.run_id,
+            miou=miou,
+            iou_dict=iou_dict,
+            train_loss=train_loss,
+            val_loss=val_loss,
+            hard_examples_count=hard_count,
+            mean_hard_iou=mean_hard_iou,
+        )
+        with open(epoch_metrics_path, 'a') as f:
+            f.write(json.dumps(epoch_log) + '\n')
 
         # ---- Qdrant: rebuild train DataLoader from epoch 2 onwards ----
         if epoch >= 1:  # epoch is 0-indexed, so epoch>=1 means "from epoch 2"
