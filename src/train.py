@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from dataset import TerrainDataset
 from model import get_model
 from utils import compute_iou_per_class, compute_miou, get_class_names
+from qdrant_miner import setup_collection, store_hard_examples, get_hard_sampler
 
 def main():
     parser = argparse.ArgumentParser(description='Train SegFormer-B2 for TerrainAI')
@@ -19,6 +20,11 @@ def main():
 
     device = torch.device('cuda' if torch.cuda.is_available() and not args.debug else 'cpu')
     print(f'Using device: {device}')
+
+    # ---- Qdrant setup ----
+    from qdrant_client import QdrantClient
+    qclient = QdrantClient(host='localhost', port=6333)
+    setup_collection(qclient)
 
     # Paths
     root = Path(args.root)
@@ -121,12 +127,24 @@ def main():
             row[f'iou_class_{cls}'] = iou_dict[cls]
         results.append(row)
 
+        # ---- Qdrant: mine hard examples after validation ----
+        print(f'[Epoch {epoch + 1}] Mining hard examples from validation set...')
+        store_hard_examples(qclient, model, val_loader, device)
+
+        # ---- Qdrant: rebuild train DataLoader from epoch 2 onwards ----
+        if epoch >= 1:  # epoch is 0-indexed, so epoch>=1 means "from epoch 2"
+            print(f'[Epoch {epoch + 1}] Rebuilding train DataLoader with hard-example sampler...')
+            hard_sampler = get_hard_sampler(qclient, train_dataset)
+            train_loader = DataLoader(
+                train_dataset,
+                batch_size=batch_size,
+                sampler=hard_sampler,  # mutually exclusive with shuffle
+                num_workers=0,
+            )
+
     # Save results CSV
     df = pd.DataFrame(results)
     df.to_csv(logs_dir / 'results.csv', index=False)
-
-if __name__ == '__main__':
-    main()
 
 if __name__ == '__main__':
     main()
