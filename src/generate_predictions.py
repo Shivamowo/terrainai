@@ -25,7 +25,8 @@ def main():
 
     root = Path(args.root)
     checkpoint = root / 'checkpoints' / 'run_best.pth'
-    test_dir = root / 'data' / 'testImages'
+    # Images live in testImages/Images/ subdirectory
+    test_dir = root / 'data' / 'testImages' / 'Images'
     pred_dir = root / 'predictions'
 
     if not checkpoint.exists():
