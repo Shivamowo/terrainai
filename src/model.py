@@ -28,7 +28,7 @@ def get_model(num_classes=10, device='cuda'):
         nn.Module: The model.
     """
     try:
-        model = smp.create_model('segformer_b2', encoder_weights='imagenet', classes=num_classes)
+        model = smp.create_model('segformer', encoder_name='mit_b2', encoder_weights='imagenet', classes=num_classes)
         wrapped_model = ModelWrapper(model, is_hf=False)
     except Exception as e:
         print(f"SMP failed: {e}. Falling back to HuggingFace.")
