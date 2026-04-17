@@ -1,5 +1,5 @@
 import json
-from vector.qdrant_store import TerrainVectorStore
+from backend.vector.qdrant_store import TerrainVectorStore
 
 LOG_PATH = "outputs/hard_examples.json"
 

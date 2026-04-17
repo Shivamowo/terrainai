@@ -236,9 +236,9 @@ hr { border-color: var(--border) !important; margin: 32px 0 !important; }
 # ─────────────────────────────────────────────
 #  ROOT PATHS
 # ─────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent.parent
-LOG_PATH  = BASE_DIR / "outputs" / "training_logs.json"
-HARD_PATH = BASE_DIR / "outputs" / "hard_examples.json"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # Go to project root
+LOG_PATH  = BASE_DIR / "logs" / "epoch_metrics.jsonl"
+HARD_PATH = BASE_DIR / "logs" / "hard_examples.jsonl"
 
 
 # ─────────────────────────────────────────────
@@ -247,12 +247,28 @@ HARD_PATH = BASE_DIR / "outputs" / "hard_examples.json"
 def load_logs():
     if not LOG_PATH.exists():
         return []
-    return json.loads(LOG_PATH.read_text())
+    logs = []
+    try:
+        with open(LOG_PATH, 'r') as f:
+            for line in f:
+                if line.strip():
+                    logs.append(json.loads(line))
+    except Exception as e:
+        print(f"Error loading logs: {e}")
+    return logs
 
 def load_hard():
     if not HARD_PATH.exists():
         return []
-    return json.loads(HARD_PATH.read_text())
+    hard = []
+    try:
+        with open(HARD_PATH, 'r') as f:
+            for line in f:
+                if line.strip():
+                    hard.append(json.loads(line))
+    except Exception as e:
+        print(f"Error loading hard examples: {e}")
+    return hard
 
 logs = load_logs()
 hard = load_hard()

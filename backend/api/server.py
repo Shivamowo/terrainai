@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from vector.qdrant_store import TerrainVectorStore
+from backend.vector.qdrant_store import TerrainVectorStore
 from pathlib import Path
 import json
 from qdrant_client.models import Filter, FieldCondition, MatchValue
@@ -7,14 +7,21 @@ from qdrant_client.models import Filter, FieldCondition, MatchValue
 app = FastAPI(title="Training Debug API")
 
 store = TerrainVectorStore()
-LOG_PATH = Path("outputs/training_logs.json")
+LOG_PATH = Path("logs/epoch_metrics.jsonl")
+RESULTS_PATH = Path("logs/results.csv")
 
 
 # ---------------- UTIL ----------------
 def load_logs():
+    """Load epoch metrics from JSONL file (one JSON object per line)"""
     if not LOG_PATH.exists():
         return []
-    return json.loads(LOG_PATH.read_text())
+    logs = []
+    with open(LOG_PATH, 'r') as f:
+        for line in f:
+            if line.strip():
+                logs.append(json.loads(line))
+    return logs
 
 
 # ---------------- HEALTH ----------------

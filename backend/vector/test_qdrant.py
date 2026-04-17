@@ -1,4 +1,4 @@
-from qdrant_store import TerrainVectorStore
+from backend.vector.qdrant_store import TerrainVectorStore
 import json
 from pathlib import Path
 

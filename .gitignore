@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+.jupyter/
+
+# Data & Training Artifacts
+data/train/
+data/val/
+data/testImages/
+logs/
+checkpoints/
+predictions/
+runs/
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.pkl
+*.pickle
+
+# Qdrant
+qdrant_data/
+*.sqlite
+*.db
+
+# Results & Metrics
+results.csv
+*.jsonl
+*.json
+
+# Temporary Files
+.cache/
+.tmp/
+tmp/
+*.tmp
+*.log
+*.pot
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# IDE Generated
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Project Specific
+outputs/
+debug_output/
+test_results/
