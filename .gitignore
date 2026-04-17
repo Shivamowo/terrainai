@@ -1,0 +1,21 @@
+# Dataset
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Checkpoints and logs
+checkpoints/
+logs/
+predictions/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

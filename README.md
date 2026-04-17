@@ -1,6 +1,6 @@
-# TerrainAI Semantic Segmentation Baseline
+# TerrainAI Semantic Segmentation
 
-This project implements a baseline SegFormer-B2 model for terrain segmentation using synthetic desert terrain data.
+This project implements SegFormer-B2 for terrain segmentation using synthetic desert terrain data.
 
 ## Setup
 
@@ -23,12 +23,14 @@ This project implements a baseline SegFormer-B2 model for terrain segmentation u
 
 ### Training
 
-Run the baseline training:
+Run the training:
 ```bash
-python src/train.py
+cd C:\Users\avani\terrainai
+conda activate terrainai
+python src/train.py --root C:\Users\avani\terrainai
 ```
 
-This will train for 10 epochs and save the best model to `checkpoints/run1_best.pth`.
+This will train for 20 epochs and save the best model to `checkpoints/run_best.pth`.
 
 ### Debug Mode
 
@@ -37,19 +39,23 @@ For local testing on CPU with a small subset:
 python src/train.py --debug
 ```
 
-This runs 1 epoch on 10 images only.
+This runs 5 epochs on 10 images only.
 
 ## Project Structure
 
-- `src/dataset.py`: Dataset class and mask remapping
-- `src/utils.py`: IoU computation utilities
-- `src/train.py`: Training script
+- `src/dataset.py`: Dataset class with augmentation and mask remapping
+- `src/model.py`: Model loading with SMP and HuggingFace fallback
+- `src/train.py`: Training script with combined loss and logging
+- `src/utils.py`: IoU computation and class names
+- `src/augment.py`: Albumentations pipeline
 - `checkpoints/`: Saved model checkpoints
+- `logs/`: Training logs and results CSV
+- `predictions/`: For inference outputs
 - `data/`: Dataset directory
 
 ## Notes
 
 - Masks are remapped from raw values to 0-9 classes
-- Images are resized to 512x512 and normalized with ImageNet stats
-- No augmentations in this baseline
-- Always test with `--debug` before pushing code
+- Classes 8 (Logs) and 9 (Flowers) are upweighted in loss
+- Combined CrossEntropy + Dice loss
+- Always test with `--debug` before full training
