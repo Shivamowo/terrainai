@@ -19,7 +19,7 @@ from src.inference import load_model, preprocess_frame, predict_frame
 
 def main():
     parser = argparse.ArgumentParser(description='Generate TerrainAI leaderboard predictions')
-    parser.add_argument('--root', default=r'C:\Users\avani\terrainai',
+    parser.add_argument('--root', default=str(Path(__file__).parent.parent),
                         help='Project root directory')
     args = parser.parse_args()
 

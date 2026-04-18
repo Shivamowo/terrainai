@@ -293,17 +293,15 @@ st.markdown("""
 #  COMPUTE SUMMARY METRICS
 # ─────────────────────────────────────────────
 if logs:
-    df = pd.DataFrame([
-        {
-            "epoch": l["epoch"],
-            "miou":  l["metrics"]["miou"],
-            "loss":  l["training"]["loss"],
-        }
-        for l in logs
-    ])
-    best_miou   = df["miou"].max()
-    last_miou   = df["miou"].iloc[-1]
-    last_loss   = df["loss"].iloc[-1]
+    df = pd.DataFrame([{
+        "epoch": e["epoch"],
+        "miou":  e["metrics"]["miou"],
+        "loss":  e["training"]["loss"],
+    } for e in logs])
+
+    best_miou    = df["miou"].max()
+    last_miou    = df["miou"].iloc[-1]
+    last_loss    = df["loss"].iloc[-1]
     total_epochs = len(df)
 else:
     best_miou = last_miou = last_loss = total_epochs = None

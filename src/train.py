@@ -40,7 +40,7 @@ class EMA:
 def main():
     parser = argparse.ArgumentParser(description='Train SegFormer-B2 for TerrainAI')
     parser.add_argument('--debug', action='store_true', help='Run 2 epochs on 10 images, CPU')
-    parser.add_argument('--root', type=str, default=r'C:\Users\avani\terrainai')
+    parser.add_argument('--root', type=str, default=str(Path(__file__).parent.parent))
     parser.add_argument('--run_id', type=str, default='run_default')
     parser.add_argument('--img_size', type=int, default=512, help='Input image size')
     parser.add_argument('--resume', type=str, default=None, metavar='CKPT_PATH',
@@ -236,13 +236,7 @@ def main():
             v = iou_dict[cls]
             print(f'  {class_names[cls]} (Class {cls}): IoU = {v:.4f}' if v is not None else f'  {class_names[cls]} (Class {cls}): IoU = None')
 
-        # Save best model
-        if miou > best_miou:
-            best_miou = miou
-            ckpt_name = f'{args.run_id}_best.pth'
-            torch.save(model.state_dict(), checkpoints_dir / ckpt_name)
-            print(f'  Saved best model ({ckpt_name}) with mIoU {miou:.4f}')
-
+        # Save EMA checkpoint if best (model still holds EMA weights here)
         if miou > best_ema_miou:
             best_ema_miou = miou
             ema_name = f'{args.run_id}_ema_best.pth'
@@ -251,6 +245,13 @@ def main():
 
         # Restore training weights before recovery checkpoint and hard mining
         model.load_state_dict(orig_state)
+
+        # Save NON-EMA checkpoint if best (using original training weights)
+        if miou > best_miou:
+            best_miou = miou
+            ckpt_name = f'{args.run_id}_best.pth'
+            torch.save(orig_state, checkpoints_dir / ckpt_name)
+            print(f'  Saved best model ({ckpt_name}) with mIoU {miou:.4f}')
 
         # Recovery checkpoint every epoch
         torch.save({
