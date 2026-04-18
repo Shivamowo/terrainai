@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 from typing import TypedDict
 
 DIM = 512  # SegFormer-B2 encoder Stage-4 output channels, fixed
-RARE_CLASS_IDS = frozenset({8, 9})  # Logs=8, Flowers=9
+RARE_CLASS_IDS = frozenset({3, 4, 6})  # Dirt=3, Grass=4, Water=6
 CLASS_NAMES = [
     'Sand', 'Gravel', 'Rocks', 'Dirt', 'Grass',
     'Trees', 'Water', 'Sky', 'Logs', 'Flowers',

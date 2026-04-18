@@ -99,7 +99,7 @@ def store_hard_examples(
         return 0, 0.0
 
     model.eval()
-    rare_classes  = [8, 9]
+    rare_classes  = [3, 4, 6]  # Dirt, Grass, Water
     iou_values: list = []
     global_img_idx   = 0
     dataset          = val_loader.dataset

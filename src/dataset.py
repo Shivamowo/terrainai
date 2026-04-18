@@ -17,11 +17,13 @@ def remap_mask(mask: np.ndarray) -> np.ndarray:
 
 class TerrainDataset(Dataset):
 
-    def __init__(self, root: str, split: str, debug: bool = False, img_size: int = 512):
+    def __init__(self, root: str, split: str, debug: bool = False, img_size: int = 512,
+                 ignore_classes: list = None):
         self.root       = Path(root)
         self.split      = split
         self.debug      = debug
         self.img_size   = img_size
+        self.ignore_classes = ignore_classes or []  # e.g. [0, 7] to ignore Sand + Sky
         self.images_dir = self.root / 'data' / split / 'images'
         self.masks_dir  = self.root / 'data' / split / 'masks'
         self.image_files = sorted(list(self.images_dir.glob('*.png')))
@@ -48,7 +50,11 @@ class TerrainDataset(Dataset):
         mask = np.array(Image.open(mask_path))
         mask = remap_mask(mask)
 
-        if self.debug:
+        # Set dominant/ignored classes to 255 so loss functions skip these pixels
+        for cls_id in self.ignore_classes:
+            mask[mask == cls_id] = 255
+
+        if self.debug and not self.ignore_classes:
             assert mask.max() <= 9 and mask.min() >= 0
 
         img  = np.array(Image.fromarray(img).resize((self.img_size, self.img_size), Image.BILINEAR))

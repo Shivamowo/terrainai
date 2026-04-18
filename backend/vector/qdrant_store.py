@@ -90,13 +90,13 @@ class TerrainVectorStore:
             with_payload=True
         )
 
-        results = sorted(results, key=lambda r: r.payload["iou_score"])
+        results = sorted(results, key=lambda r: r.payload["iou"])
 
         return [
             {
-                "patch_path": r.payload["patch_path"],
-                "iou_score": r.payload["iou_score"],
-                "epoch_indexed": r.payload["epoch_indexed"],
+                "image_path": r.payload["image_path"],
+                "iou": r.payload["iou"],
+                "epoch": r.payload["epoch"],
             }
             for r in results
         ]
