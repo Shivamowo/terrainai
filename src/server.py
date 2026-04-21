@@ -116,7 +116,7 @@ async def analyze_image(file: UploadFile = File(...)):
         _, buf2 = cv2.imencode('.png', orig)
         original_b64 = base64.b64encode(buf2.tobytes()).decode('utf-8')
 
-        session_id = str(uuid.uuid4())[:8]
+        session_id = str(uuid.uuid4())
         session_data = {
             'session_id': session_id,
             'type': 'image',
@@ -148,6 +148,10 @@ async def analyze_image(file: UploadFile = File(...)):
             'analysis': analysis,
             'class_legend': legend,
         })
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 
@@ -194,6 +198,10 @@ async def analyze_video_endpoint(file: UploadFile = File(...)):
             'summary': summary,
             'tactical_summary': tactical_summary,
         })
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 

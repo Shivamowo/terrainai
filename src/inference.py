@@ -101,7 +101,7 @@ def predict_frame(
     Run inference. Returns (H,W) uint8 mask with class indices 0-9 at original resolution.
     """
     tensor = tensor.to(device)
-    with torch.no_grad(), autocast('cuda'):
+    with torch.no_grad(), autocast(device.type):
         logits = model(tensor)                    # (1, 10, h', w')
         upsampled = F.interpolate(
             logits.float(),

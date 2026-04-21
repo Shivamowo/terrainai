@@ -51,7 +51,6 @@ Thumbs.db
 data/train/
 data/val/
 data/testImages/
-logs/
 checkpoints/
 predictions/
 runs/
@@ -68,9 +67,8 @@ qdrant_data/
 *.db
 
 # Results & Metrics
-results.csv
-*.jsonl
-*.json
+
+
 
 # Temporary Files
 .cache/
